@@ -61,6 +61,27 @@ streams:
         raw_available: false
         source_status: context-derived
 
+  hpr-atlas:
+    title: HPR Atlas
+    file: kb/streams/hpr-atlas.md
+    status: ACTIVE
+    maturity: HIGH
+    related:
+      - hpradarhq
+    sources:
+      - type: chatgpt
+        session: hpr-atlas-heli-2026-08-18
+        raw_available: false
+        source_status: context-derived
+      - type: github
+        repository: ngtrthanh/hpr-atlas
+        commit: 82b5312fed5622564d73dc75873535badd2e5b6a
+        source_status: authoritative-assets
+      - type: user-data
+        name: aircraft.json snapshot statistics
+        raw_available: false
+        source_status: session-provided
+
   hpradarhq:
     title: HPRadarHQ
     file: kb/streams/hpradarhq.md
@@ -68,6 +89,7 @@ streams:
     maturity: MEDIUM
     related:
       - github-org-migration
+      - hpr-atlas
     sources:
       - type: chatgpt
         session: current-chat-2026-08-18
