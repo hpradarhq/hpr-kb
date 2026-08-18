@@ -1,0 +1,73 @@
+knowledge_base:
+  schema: 1
+  repository: ngtrthanh/hpr-kb
+
+streams:
+  grand-matflow:
+    title: Grand MATFLOW
+    file: kb/streams/grand-matflow.md
+    status: ACTIVE
+    maturity: HIGH
+    related:
+      - plantops-platform
+      - legacy-port-modernization
+    sources:
+      - type: chatgpt
+        session: current-chat-2026-08-18
+        raw_available: false
+        source_status: context-derived
+
+  plantops-platform:
+    title: PlantOps Platform
+    file: kb/streams/plantops-platform.md
+    status: ACTIVE
+    maturity: HIGH
+    related:
+      - grand-matflow
+      - github-org-migration
+    sources:
+      - type: chatgpt
+        session: current-chat-2026-08-18
+        raw_available: false
+        source_status: context-derived
+
+  github-org-migration:
+    title: GitHub Organization Migration
+    file: kb/streams/github-org-migration.md
+    status: ACTIVE
+    maturity: HIGH
+    related:
+      - plantops-platform
+      - hpradarhq
+    sources:
+      - type: chatgpt
+        session: current-chat-2026-08-18
+        raw_available: false
+        source_status: context-derived
+
+  hpradarhq:
+    title: HPRadarHQ
+    file: kb/streams/hpradarhq.md
+    status: ACTIVE
+    maturity: MEDIUM
+    related:
+      - github-org-migration
+    sources:
+      - type: chatgpt
+        session: current-chat-2026-08-18
+        raw_available: false
+        source_status: context-derived
+
+  legacy-port-modernization:
+    title: Legacy Port Modernization
+    file: kb/streams/legacy-port-modernization.md
+    status: ACTIVE
+    maturity: MEDIUM
+    related:
+      - grand-matflow
+      - plantops-platform
+    sources:
+      - type: chatgpt
+        session: current-chat-2026-08-18
+        raw_available: false
+        source_status: context-derived
