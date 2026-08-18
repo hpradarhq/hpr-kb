@@ -6,6 +6,7 @@
 | [PlantOps Platform](streams/plantops-platform.md) | Multi-engine industrial operations platform and tenant composition model | ACTIVE | HIGH | 2026-08-18 | Grand MATFLOW, WMS Operations, GitHub Organization Migration |
 | [WMS Operations](streams/wms-operations.md) | Practical warehouse/port workflow application composed around planning, execution and reporting | ACTIVE | HIGH | 2026-08-18 | Grand MATFLOW, PlantOps Platform |
 | [GitHub Organization Migration](streams/github-org-migration.md) | Move product repos from `ngtrthanh` into governed organizations without breaking CI/CD | ACTIVE | HIGH | 2026-08-18 | PlantOps Platform, HPRadarHQ |
-| [HPRadarHQ](streams/hpradarhq.md) | GitHub organization boundary for the HPRadar product family | ACTIVE | MEDIUM | 2026-08-18 | GitHub Organization Migration |
+| [HPR Atlas](streams/hpr-atlas.md) | Unified tracker FE architecture, entity arbitration and native aircraft/heli rendering | ACTIVE | HIGH | 2026-08-18 | HPRadarHQ |
+| [HPRadarHQ](streams/hpradarhq.md) | GitHub organization boundary for the HPRadar product family | ACTIVE | MEDIUM | 2026-08-18 | GitHub Organization Migration, HPR Atlas |
 | [Legacy Port Modernization](streams/legacy-port-modernization.md) | Contain and progressively replace the restored legacy port application | ACTIVE | MEDIUM | 2026-08-18 | Grand MATFLOW, PlantOps Platform |
 | [Chess Leisure](streams/chess-leisure.md) | Preserve chess as a separate leisure/study stream rather than losing it inside technical sessions | ACTIVE | LOW | 2026-08-18 | — |
