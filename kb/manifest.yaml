@@ -10,6 +10,7 @@ streams:
     maturity: HIGH
     related:
       - plantops-platform
+      - wms-operations
       - legacy-port-modernization
     sources:
       - type: chatgpt
@@ -24,10 +25,25 @@ streams:
     maturity: HIGH
     related:
       - grand-matflow
+      - wms-operations
       - github-org-migration
     sources:
       - type: chatgpt
         session: current-chat-2026-08-18
+        raw_available: false
+        source_status: context-derived
+
+  wms-operations:
+    title: WMS Operations
+    file: kb/streams/wms-operations.md
+    status: ACTIVE
+    maturity: HIGH
+    related:
+      - grand-matflow
+      - plantops-platform
+    sources:
+      - type: chatgpt
+        session: chess-to-grand-matflow-context-2026-08
         raw_available: false
         source_status: context-derived
 
@@ -69,5 +85,17 @@ streams:
     sources:
       - type: chatgpt
         session: current-chat-2026-08-18
+        raw_available: false
+        source_status: context-derived
+
+  chess-leisure:
+    title: Chess Leisure
+    file: kb/streams/chess-leisure.md
+    status: ACTIVE
+    maturity: LOW
+    related: []
+    sources:
+      - type: chatgpt
+        session: chess-to-grand-matflow-context-2026-08
         raw_available: false
         source_status: context-derived
