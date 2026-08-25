@@ -2,6 +2,7 @@
 
 | Stream | Purpose | Status | Maturity | Last Updated | Related Streams |
 |---|---|---|---|---|---|
+| [GitHub–Tailscale Container Deployment](streams/github-tailscale-container-deployment.md) | Reusable CI/CD procedure: GitHub Cloud → GHCR → ephemeral Tailscale → disposable same-host staging → approved production | ACTIVE | HIGH | 2026-08-25 | GitHub Organization Migration, PlantOps Platform |
 | [Grand MATFLOW](streams/grand-matflow.md) | Canonical operational material-movement truth and execution engine | ACTIVE | HIGH | 2026-08-18 | PlantOps Platform, WMS Operations, Legacy Port Modernization |
 | [PlantOps Platform](streams/plantops-platform.md) | Multi-engine industrial operations platform and tenant composition model | ACTIVE | HIGH | 2026-08-18 | Grand MATFLOW, WMS Operations, GitHub Organization Migration |
 | [WMS Operations](streams/wms-operations.md) | Practical warehouse/port workflow application composed around planning, execution and reporting | ACTIVE | HIGH | 2026-08-18 | Grand MATFLOW, PlantOps Platform |
