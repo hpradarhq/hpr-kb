@@ -1,6 +1,6 @@
 knowledge_base:
   schema: 1
-  repository: ngtrthanh/hpr-kb
+  repository: hpradarhq/hpr-kb
 
 streams:
   github-tailscale-container-deployment:
