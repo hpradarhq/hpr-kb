@@ -3,6 +3,23 @@ knowledge_base:
   repository: ngtrthanh/hpr-kb
 
 streams:
+  github-tailscale-container-deployment:
+    title: GitHub–Tailscale Container Deployment
+    file: kb/streams/github-tailscale-container-deployment.md
+    status: ACTIVE
+    maturity: HIGH
+    related:
+      - github-org-migration
+      - plantops-platform
+    sources:
+      - type: chatgpt
+        session: deployment-design-2026-08-25
+        raw_available: false
+        source_status: session-derived
+      - type: github
+        repository: plantops/plantops-beltrisk
+        source_status: reference-implementation
+
   grand-matflow:
     title: Grand MATFLOW
     file: kb/streams/grand-matflow.md
