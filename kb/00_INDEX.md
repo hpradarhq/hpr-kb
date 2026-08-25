@@ -3,6 +3,7 @@
 | Stream | Purpose | Status | Maturity | Last Updated | Related Streams |
 |---|---|---|---|---|---|
 | [BeltRisk — Risk-Constrained JIT](streams/beltrisk-risk-constrained-jit.md) | Director-grade decision model for conveyor belt performance → risk → coverage → cost → action, optimizing JIT spares under hard risk guardrails | ACTIVE | MEDIUM | 2026-08-25 | PlantOps Platform, GitHub–Tailscale Immutable Artifact Deployment |
+| [BeltRisk — Data Explorer, Evidence & Override Governance](streams/beltrisk-data-evidence-override.md) | Evidence browser, provenance, data-quality visibility and controlled human override behind the simplified BeltRisk decision surface | ACTIVE | MEDIUM | 2026-08-25 | BeltRisk — Risk-Constrained JIT, PlantOps Platform |
 | [GitHub–Tailscale Immutable Artifact Deployment](streams/github-tailscale-artifact-deployment.md) | Reusable CI/CD procedure for containers or binaries: build once → immutable artifact → ephemeral Tailscale → staging → approved production | ACTIVE | HIGH | 2026-08-25 | GitHub Organization Migration, PlantOps Platform |
 | [Grand MATFLOW](streams/grand-matflow.md) | Canonical operational material-movement truth and execution engine | ACTIVE | HIGH | 2026-08-18 | PlantOps Platform, WMS Operations, Legacy Port Modernization |
 | [PlantOps Platform](streams/plantops-platform.md) | Multi-engine industrial operations platform and tenant composition model | ACTIVE | HIGH | 2026-08-18 | Grand MATFLOW, WMS Operations, GitHub Organization Migration |
