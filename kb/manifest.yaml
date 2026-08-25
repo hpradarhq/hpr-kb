@@ -3,9 +3,9 @@ knowledge_base:
   repository: hpradarhq/hpr-kb
 
 streams:
-  github-tailscale-container-deployment:
-    title: GitHub–Tailscale Container Deployment
-    file: kb/streams/github-tailscale-container-deployment.md
+  github-tailscale-artifact-deployment:
+    title: GitHub–Tailscale Immutable Artifact Deployment
+    file: kb/streams/github-tailscale-artifact-deployment.md
     status: ACTIVE
     maturity: HIGH
     related:
@@ -18,7 +18,7 @@ streams:
         source_status: session-derived
       - type: github
         repository: plantops/plantops-beltrisk
-        source_status: reference-implementation
+        source_status: container-reference-implementation
 
   grand-matflow:
     title: Grand MATFLOW
