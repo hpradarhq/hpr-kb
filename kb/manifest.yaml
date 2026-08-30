@@ -3,6 +3,27 @@ knowledge_base:
   repository: hpradarhq/hpr-kb
 
 streams:
+  frontend-quality-standard:
+    title: Front-End Quality Standard
+    file: kb/streams/frontend-quality-standard.md
+    status: ACTIVE
+    maturity: HIGH
+    related:
+      - hpr-atlas
+      - hpradarhq
+    sources:
+      - type: github
+        repository: thedaviddias/Front-End-Checklist
+        commit: 30756a79b2f7d4363ac592710146c8e28fa9f1b5
+        source_status: external-rule-corpus
+      - type: github
+        repository: hpradarhq/hpr-traffic-api
+        source_status: first-adopter
+      - type: chatgpt
+        session: frontend-checklist-adoption-2026-08-30
+        raw_available: false
+        source_status: session-derived
+
   github-tailscale-artifact-deployment:
     title: GitHub–Tailscale Immutable Artifact Deployment
     file: kb/streams/github-tailscale-artifact-deployment.md
