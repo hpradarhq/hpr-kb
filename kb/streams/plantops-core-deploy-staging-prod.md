@@ -6,26 +6,33 @@
 
 ## Decision
 
-Reuse the existing GitHub → Tailscale OIDC configuration already proven by BeltRisk.
+Use GitHub Actions + Tailscale workload identity federation/OIDC. Do not add a reusable Tailscale auth key by default.
 
-For PlantOps Core, do **not** create another Tailscale long-lived secret by default.
+For PlantOps Core STAGING, GitHub Environment must be named exactly:
 
-Reuse these existing GitHub Environment secret names:
+```text
+staging
+```
+
+Environment secrets:
 
 ```text
 TS_OAUTH_CLIENT_ID
 TS_AUDIENCE
+STAGING_SSH_KEY
 ```
 
-Only provide/change the SSH deployment key for PlantOps Core:
+The first two may reuse the BeltRisk federated credential **only if that Tailscale trust credential also accepts the PlantOps Core GitHub OIDC identity**.
+
+Expected GitHub OIDC subject for this job:
 
 ```text
-PROD_SSH_KEY
+repo:plantops/plantops-terminal:environment:staging
 ```
 
-If the existing Tailscale OIDC identity/tag cannot reach the PlantOps target nodes, change only the Tailnet ACL/tag scope. Do not create another OAuth/OIDC credential unless isolation is actually required.
+If the Tailscale action receives Client ID/Audience but token exchange returns HTTP 403 Unauthorized, the GitHub secrets are already working. Fix the Tailscale Trust credential claim/repository/environment restriction to accept the subject above. Do not rotate SSH keys or recreate GitHub secrets for that error.
 
-If a writable Tailscale connector becomes available to ChatGPT, prefer configuring/testing the Tailnet path directly instead of asking the operator to copy secrets manually.
+If a writable Tailscale connector becomes available to ChatGPT, prefer configuring/testing this trust path directly instead of asking the operator to copy values manually.
 
 ## App topology
 
@@ -51,40 +58,61 @@ Repository:
 plantops/plantops-terminal
 ```
 
-Image:
-
-```text
-ghcr.io/plantops/plantops-terminal:sha-<commit12>
-```
-
 The exact same immutable image/digest must be used for STAGING and PROD.
 
 ## STAGING
 
-Target:
-
 ```text
-host: NUC
+host: 100.100.40.89 (NUC)
+user: deploy
 root: /srv/staging/cfc/plantops-core
 port: 8481
 database: plantops_core_stg
+compose project: plantops-core-stg
 ```
 
 Purpose:
 
 ```text
-apply schema + deterministic master seed
+isolated PostgreSQL STG
+apply schema + deterministic seed
 stage/replay real historical PLAN + QC + FMRP data
 run health checks
-inspect migration receipt
-allow read-only MCP/data scouting
+write deployment receipt
+allow read-only scouting
 ```
 
-STAGING is where data/migration defects are found. Do not use toy fixtures as the main acceptance evidence.
+STAGING is where data/migration defects are found. Real PlantOps history, not toy fixtures, is the acceptance evidence.
+
+Current workflow:
+
+```text
+.github/workflows/deploy-staging.yml
+```
+
+Credential preflight must show only presence, never values:
+
+```text
+TS_OAUTH_CLIENT_ID=PRESENT
+TS_AUDIENCE=PRESENT
+STAGING_SSH_KEY=PRESENT
+```
+
+Then:
+
+```text
+GitHub OIDC
+→ Tailscale token exchange
+→ Tailscale reachability to NUC
+→ SSH deploy@NUC
+→ isolated Postgres STG
+→ migrations + seed
+→ PlantOps Core :8481
+→ /healthz + /deployment.json + /migration-receipt
+→ receipt
+```
 
 ## PROD
-
-Target:
 
 ```text
 host: inst4
@@ -93,79 +121,19 @@ port: 8480
 database: plantops_core_prod
 ```
 
-PROD receives the exact artifact already verified on STAGING.
-
-Do not automatically load historical migration staging evidence into PROD.
-
-## GitHub Actions minimum
-
-```yaml
-permissions:
-  contents: read
-  packages: read
-  id-token: write
-```
-
-Tailscale join follows the BeltRisk pattern:
-
-```yaml
-- name: Join plant tailnet
-  uses: tailscale/github-action@v4
-  with:
-    oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-    audience: ${{ secrets.TS_AUDIENCE }}
-    tags: <existing approved deploy tag>
-```
-
-SSH key follows the same existing secret name:
-
-```yaml
-env:
-  PROD_SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
-```
-
-No extra Tailscale auth key should be introduced unless OIDC cannot serve the target scope.
-
-## Host deploy contract
-
-Use the repository's existing bounded script:
-
-```text
-scripts/deploy-node.sh
-```
-
-It already separates:
-
-```text
-staging    → /srv/staging/cfc/plantops-core :8481
-production → /srv/prod/cfc/plantops-core    :8480
-```
-
-Expected sequence:
-
-```text
-pull immutable image
-→ apply migrations
-→ seed master data
-→ STAGING only: replay real history when provided
-→ docker compose up --no-build
-→ /healthz
-→ /deployment.json
-→ /migration-receipt
-→ write deployment receipt
-```
+Do not focus on PROD until STAGING is green. PROD later receives the exact artifact already verified on STAGING. Do not automatically load historical migration staging evidence into PROD.
 
 ## KISS rules
 
-1. Reuse proven Tailscale OIDC configuration.
-2. Change only SSH key/target access when sufficient.
-3. STAGING first; PROD only after STAGING passes.
-4. Same artifact bytes on both nodes.
-5. No build on nodes.
-6. No public SSH for CI.
-7. No Kubernetes/self-hosted runner/new control plane for this app.
-8. Real PlantOps historical data is the primary migration test evidence.
-9. If a Tailscale connector becomes writable, configure/test it directly rather than asking for manual secret handling.
+1. STAGING first; ignore PROD until STAGING passes.
+2. Build once; no source build on nodes.
+3. Same immutable artifact for later PROD promotion.
+4. OIDC over Tailscale; no public SSH for CI.
+5. Dedicated STAGING SSH key: `STAGING_SSH_KEY`.
+6. Reuse BeltRisk Tailscale credential only when its trust claims explicitly allow PlantOps Core.
+7. HTTP 403 during JWT exchange means Tailscale trust mismatch, not SSH failure.
+8. No Kubernetes, permanent self-hosted runner, or extra deployment control plane for this app.
+9. Use real PlantOps historical data as the migration acceptance evidence.
 
 ## Recall phrase
 
