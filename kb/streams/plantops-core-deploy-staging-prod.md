@@ -24,7 +24,7 @@ STAGING_SSH_KEY
 
 The first two may reuse the BeltRisk federated credential **only if that Tailscale trust credential also accepts the PlantOps Core GitHub OIDC identity**.
 
-For this repository, Tailscale reported the actual GitHub OIDC subject as the ID-qualified form:
+For this repository, Tailscale reported and successfully verified the actual GitHub OIDC subject as the ID-qualified form:
 
 ```text
 repo:plantops@312055198/plantops-terminal@1351582048:environment:staging
@@ -65,7 +65,8 @@ The exact same immutable image/digest must be used for STAGING and PROD.
 ## STAGING
 
 ```text
-host: 100.100.40.89 (NUC)
+host: 100.100.40.89
+Tailscale node name observed: proxmox
 user: deploy
 root: /srv/staging/cfc/plantops-core
 port: 8481
@@ -105,14 +106,43 @@ Then:
 ```text
 GitHub OIDC
 → Tailscale token exchange
-→ Tailscale reachability to NUC
-→ SSH deploy@NUC
+→ Tailscale reachability to node
+→ SSH deploy@100.100.40.89
 → isolated Postgres STG
 → migrations + seed
 → PlantOps Core :8481
 → /healthz + /deployment.json + /migration-receipt
 → receipt
 ```
+
+### Verified deployment — 2026-09-01
+
+GitHub Actions run:
+
+```text
+33534790430 attempt 4
+```
+
+Result:
+
+```text
+OIDC token exchange PASS
+Tailscale connectivity PASS
+SSH deploy user PASS
+compose install PASS
+GHCR login PASS
+isolated STG deployment PASS
+workflow conclusion SUCCESS
+```
+
+Verified artifact:
+
+```text
+ghcr.io/plantops/plantops-terminal:sha-7c6469af4f8c
+commit 7c6469af4f8c0783b9a00ddc9f58c8bc132f69b2
+```
+
+The workflow is fail-closed on `/healthz`, `/deployment.json`, `/migration-receipt`, and commit matching before it can report success. Historical workbook replay remains a separate next step; the successful infrastructure deployment does not claim historical rows have been loaded yet.
 
 ## PROD
 
@@ -123,7 +153,7 @@ port: 8480
 database: plantops_core_prod
 ```
 
-Do not focus on PROD until STAGING is green. PROD later receives the exact artifact already verified on STAGING. Do not automatically load historical migration staging evidence into PROD.
+Do not focus on PROD until STAGING data/migration validation is green. PROD later receives the exact artifact already verified on STAGING. Do not automatically load historical migration staging evidence into PROD.
 
 ## KISS rules
 
