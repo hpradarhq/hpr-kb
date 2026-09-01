@@ -24,13 +24,15 @@ STAGING_SSH_KEY
 
 The first two may reuse the BeltRisk federated credential **only if that Tailscale trust credential also accepts the PlantOps Core GitHub OIDC identity**.
 
-Expected GitHub OIDC subject for this job:
+For this repository, Tailscale reported the actual GitHub OIDC subject as the ID-qualified form:
 
 ```text
-repo:plantops/plantops-terminal:environment:staging
+repo:plantops@312055198/plantops-terminal@1351582048:environment:staging
 ```
 
-If the Tailscale action receives Client ID/Audience but token exchange returns HTTP 403 Unauthorized, the GitHub secrets are already working. Fix the Tailscale Trust credential claim/repository/environment restriction to accept the subject above. Do not rotate SSH keys or recreate GitHub secrets for that error.
+Use the **exact subject Tailscale reports in the token-exchange error**, not a hand-written name-only approximation such as `repo:plantops/plantops-terminal:environment:staging`.
+
+If the Tailscale action receives Client ID/Audience but token exchange returns HTTP 403 Unauthorized, the GitHub secrets are already working. Fix the Tailscale Trust credential claim/repository/environment restriction to accept the exact reported subject. Do not rotate SSH keys or recreate GitHub secrets for that error.
 
 If a writable Tailscale connector becomes available to ChatGPT, prefer configuring/testing this trust path directly instead of asking the operator to copy values manually.
 
@@ -132,8 +134,9 @@ Do not focus on PROD until STAGING is green. PROD later receives the exact artif
 5. Dedicated STAGING SSH key: `STAGING_SSH_KEY`.
 6. Reuse BeltRisk Tailscale credential only when its trust claims explicitly allow PlantOps Core.
 7. HTTP 403 during JWT exchange means Tailscale trust mismatch, not SSH failure.
-8. No Kubernetes, permanent self-hosted runner, or extra deployment control plane for this app.
-9. Use real PlantOps historical data as the migration acceptance evidence.
+8. Trust the exact ID-qualified subject shown by Tailscale; do not infer a name-only subject.
+9. No Kubernetes, permanent self-hosted runner, or extra deployment control plane for this app.
+10. Use real PlantOps historical data as the migration acceptance evidence.
 
 ## Recall phrase
 
