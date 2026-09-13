@@ -120,6 +120,35 @@ streams:
         raw_available: false
         source_status: session-provided
 
+  hpr-rf-world:
+    title: Beyond ADS-B and AIS — The Free-to-Air RF World
+    file: kb/streams/hpr-rf-world.md
+    status: EXPLORATORY
+    maturity: MEDIUM
+    related:
+      - hpr-atlas
+      - hpradarhq
+    sources:
+      - type: chatgpt
+        session: hpr-edge-rf-world-2026-09-13
+        raw_available: false
+        source_status: session-derived
+      - type: external
+        name: FAA Remote ID
+        source_status: authoritative-reference
+      - type: external
+        name: FLARM FAMP Public Protocol
+        source_status: authoritative-reference
+      - type: external
+        name: IALA VDES
+        source_status: authoritative-reference
+      - type: external
+        name: ITU-R M.2092-2
+        source_status: authoritative-reference
+      - type: external
+        name: NOAA SARSAT 406 MHz beacons
+        source_status: authoritative-reference
+
   hpradarhq:
     title: HPRadarHQ
     file: kb/streams/hpradarhq.md
