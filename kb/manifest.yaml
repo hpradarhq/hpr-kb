@@ -128,6 +128,7 @@ streams:
     maturity: HIGH
     related:
       - hpr-rf-world
+      - hpr-rf-harvest-landscape
       - hpr-atlas
       - hpradarhq
     sources:
@@ -148,6 +149,49 @@ streams:
         file: kb/references/hpr-rf-world.md
         source_status: authoritative-source-register
 
+  hpr-rf-harvest-landscape:
+    title: HPR Free-to-Harvest RF Landscape
+    file: kb/streams/hpr-rf-harvest-landscape.md
+    status: EXPLORATORY
+    maturity: MEDIUM
+    related:
+      - hpr-observation-core
+      - hpr-rf-world
+      - hpr-atlas
+      - hpradarhq
+    sources:
+      - type: chatgpt
+        session: hpr-rf-harvest-landscape-2026-09-13
+        raw_available: false
+        source_status: session-derived
+      - type: kb-reference
+        file: kb/references/hpr-rf-harvest-landscape.md
+        source_status: authoritative-source-register
+      - type: external-authority
+        name: EUROCONTROL surveillance and datalink
+        source_status: primary-regulator
+      - type: external-standard
+        name: ITU-R M.1371-6 AIS and M.2092-2 VDES
+        source_status: primary-standard
+      - type: external-authority
+        name: FAA ADS-B and Remote ID
+        source_status: primary-regulator
+      - type: external-authority
+        name: EASA Direct Remote Identification
+        source_status: primary-regulator
+      - type: external-authority
+        name: NOAA NWS radiosonde and NESDIS HRIT/EMWIN
+        source_status: primary-regulator
+      - type: external-authority
+        name: Vietnam Radio Frequency Department and Government licence-exemption rules
+        source_status: primary-national-authority
+      - type: peer-reviewed
+        name: passive radar literature
+        source_status: research-evidence
+      - type: project-docs
+        name: open-source decoder and SDR projects
+        source_status: implementation-evidence
+
   hpr-rf-world:
     title: Beyond ADS-B and AIS — The Free-to-Air RF World
     file: kb/streams/hpr-rf-world.md
@@ -155,6 +199,7 @@ streams:
     maturity: MEDIUM
     related:
       - hpr-observation-core
+      - hpr-rf-harvest-landscape
       - hpr-atlas
       - hpradarhq
     sources:
