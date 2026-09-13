@@ -44,6 +44,8 @@ Each durable topic is stored in `kb/streams/<stable-slug>.md` and uses these sec
 
 Authoritative raw transcripts, when available, belong under `raw/chatgpt/YYYY/MM/` and are immutable evidence. If no authoritative transcript is available, stream sources must explicitly record `raw_available: false` and `source_status: context-derived`.
 
+External factual claims follow [`source-policy.md`](source-policy.md). Standards, regulatory, protocol-semantic, licensing and safety claims should use the strongest available primary authority and must distinguish current from superseded standards.
+
 ## Canonicalization rules
 
 Later explicit decisions supersede earlier proposals when they materially conflict. Implemented state outranks proposals. Brainstorming must not be promoted into canonical state. Significant superseded architecture is preserved under Evolution or Rejected / Superseded Alternatives rather than presented as current truth.

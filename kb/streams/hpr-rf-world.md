@@ -7,6 +7,7 @@ content_type: blog-candidate
 created: 2026-09-13
 updated: 2026-09-13
 related:
+  - hpr-observation-core
   - hpr-atlas
   - hpradarhq
 tags:
@@ -26,362 +27,281 @@ tags:
 
 ## Thesis
 
-HPRadar began from two obvious public broadcast worlds: aircraft on ADS-B and vessels on AIS. But an SDR receiver can observe a much larger set of legitimate, openly broadcast radio systems used for identification, navigation, safety, telemetry and environmental sensing.
+HPRadar started from two obvious public-broadcast worlds: aircraft on ADS-B and vessels on AIS. But those are only two members of a much larger family of radio systems used for surveillance, identification, navigation, safety, telemetry and environmental sensing.
 
-The useful architectural insight is not simply “add more decoders.” It is to treat each receiver as an **observation node** and each protocol as one possible source of evidence about real-world objects and events.
+The architectural opportunity is not to accumulate decoders. It is to treat each receiver as an **observation node**, each protocol as an adapter, and each decoded or solved value as evidence with provenance.
 
-That changes the product idea from an ADS-B/AIS tracker into a **multi-domain RF observation network**.
+That turns the product idea from an ADS-B/AIS tracker into a **multi-domain observation network**.
 
-One correction matters from the beginning: **MLAT is not another RF signal.** Multilateration is a positioning method. Multiple receivers timestamp the same Mode-S transmission and a solver estimates the transmitter position from time-difference-of-arrival measurements.
+One distinction matters immediately: **MLAT is not another RF signal.** Multilateration is a surveillance/positioning technique that consumes synchronized observations of transponder transmissions from multiple receivers and solves a position. EUROCONTROL treats Mode S, multilateration and ADS-B as distinct but complementary surveillance technologies. [A5][A7]
 
 ```text
-RF broadcast
-    ↓
+RF / network input
+      ↓
 receiver observation
-    ↓
-decoder / solver
-    ↓
-canonical object or event
-    ↓
-HPR Atlas
+      ↓
+protocol adapter / solver
+      ↓
+HPR Observation Core
+      ↓
+canonical entity / event / measurement
+      ↓
+Atlas / APIs / wire projections
 ```
 
-This stream surveys the most interesting free-to-air families beyond the current ADS-B/AIS core. It is exploratory, not yet a commitment to implement every protocol.
+The canonical data model is defined separately in [HPR Observation Core](hpr-observation-core.md). This article is the exploratory domain map; the core is what prevents every new signal from becoming a new architecture.
+
+A section-by-section evidence audit is maintained in [`../references/hpr-rf-world.md`](../references/hpr-rf-world.md), under the KB-wide [`../../meta/source-policy.md`](../../meta/source-policy.md).
 
 ---
 
-## 1. Mode-S: the aviation world is larger than ADS-B
+## 1. Mode-S: aviation is larger than ADS-B
 
-1090 MHz contains much more than ADS-B Extended Squitter. Mode-S surveillance traffic can expose aircraft identity and surveillance state even when an aircraft is not broadcasting an ADS-B position.
+The 1030/1090 MHz surveillance environment carries more than ADS-B Extended Squitter. EUROCONTROL explicitly identifies Mode A/C, Mode S, multilateration, ADS-B and ACAS as users of the 1030/1090 MHz surveillance RF environment. [A5][A6]
 
-Useful observations may include:
-
-- ICAO 24-bit address
-- Mode-S replies
-- altitude and squawk when available
-- Comm-B information for suitably interrogated aircraft
-- receiver timestamp and signal level
-- source/validity metadata
-
-The important consequence for HPRadar is that **“no ADS-B position” does not mean “no observable aircraft.”**
-
-With synchronized receivers, the same Mode-S observations can feed MLAT:
+For HPRadar, this means that an aircraft can still leave useful surveillance observations even when it is not directly broadcasting an ADS-B position. Mode-S observations may contribute identity or surveillance fields depending on message/reply type, and synchronized observations can feed a multilateration system. [A5][A7]
 
 ```text
-Aircraft Mode-S transmission
+Mode-S transmission / reply
         │
-        ├── Receiver A: t1
-        ├── Receiver B: t2
-        ├── Receiver C: t3
-        └── Receiver D: t4
-                    ↓
-                MLAT solver
-                    ↓
-                 position
+        ├── Receiver A
+        ├── Receiver B
+        ├── Receiver C
+        └── Receiver D
+                 ↓
+              MLAT
+                 ↓
+          solved position
 ```
 
-Mode-S therefore belongs in the HPR aviation core, while MLAT belongs in the derived/solved layer.
+Therefore Mode-S belongs in the aviation ingestion family, while MLAT belongs in the `network_solved` provenance class of the HPR Observation Core.
 
 ---
 
-## 2. UAT 978 MHz: another ADS-B ecosystem
+## 2. UAT 978 MHz: ADS-B is not tied to one bearer
 
-The United States also uses 978 MHz Universal Access Transceiver (UAT) alongside 1090ES. UAT can carry aircraft surveillance traffic and also supports services such as TIS-B and FIS-B.
+In the United States, FAA guidance recognizes both 1090 MHz Extended Squitter and 978 MHz Universal Access Transceiver as ADS-B links. UAT also supports reception of FAA services including FIS-B, while traffic services are available through the ADS-B ecosystem. [A3][A4]
 
-For a Vietnam-focused HPRadar deployment this is low priority. For a future global receiver architecture, however, it is useful evidence that the aviation ingestion layer should not be hard-coded around one physical bearer.
-
-The HPR abstraction should be closer to:
+UAT is low priority for a Vietnam-first deployment, but architecturally it proves an important point:
 
 ```text
-aviation observation
-    ├── 1090ES ADS-B
-    ├── Mode-S
-    ├── UAT
-    ├── MLAT-derived state
-    └── other aviation datalinks
+aircraft surveillance != one frequency != one decoder != one object model
 ```
 
-rather than “aircraft = 1090 MHz JSON.”
+HPR should model the aircraft observation independently from the physical bearer.
 
 ---
 
-## 3. Drone Remote ID: probably the highest-value new domain
+## 3. Drone Remote ID: a direct path into the UAV domain
 
-Broadcast Remote ID is unusually well aligned with HPRadar. Standard implementations broadcast identification and location data over local radio technologies such as Wi-Fi and Bluetooth. Depending on the implementation and jurisdiction, observations can include drone identity, drone position, altitude, velocity and a control-station or take-off location.
+FAA Remote ID rules describe drones broadcasting identification and location information by radio frequency, with Wi-Fi and Bluetooth given as examples. FAA distinguishes Standard Remote ID drones from add-on broadcast modules. [U1]
 
-Conceptually this fills a large gap in low-altitude awareness:
+EASA's direct-remote-identification rules likewise require periodic local broadcast using an open and documented transmission protocol, with data that can include operator/aircraft identity, timestamp, aircraft position and height, course, ground speed, and remote-pilot or take-off location depending on the applicable class/rule. [U2]
+
+This makes Remote ID a much cleaner UAV source than trying to infer drones solely from ADS-B aircraft categories.
 
 ```text
-ADS-B       → conventional aviation
-Mode-S/MLAT → aircraft without direct ADS-B position
-Remote ID   → drones / UAS
+ADS-B / Mode-S → conventional aviation surveillance
+MLAT            → solved position from transponder observations
+Remote ID       → direct local UAS identification / state broadcast
 ```
 
-For HPR Atlas this should not be forced into the ADS-B decoder. It is better represented as another observation family feeding the same canonical spatial model.
+In HPR terms, Remote ID should be another source adapter feeding the same canonical entity/fact model.
 
-A future HPR Edge station could therefore support:
+---
+
+## 4. FLARM, OGN and related low-altitude ecosystems
+
+FLARM has published the FAMP Public Protocol. The protocol owner states that FAMP traffic information includes identification, position, heading and aircraft type, and that regional implementations use license-free bands including 868 MHz and 915 MHz. [U3][U4]
+
+The Open Glider Network documents a receiver ecosystem supporting multiple low-altitude aviation protocols and sources. OGN documentation is authoritative for what the OGN project supports, but it is not a regulator or standards body; HPR must preserve that distinction. [U5]
+
+The licensing boundary is particularly important. FLARM's own publication states that defined receive-only, non-commercial use is permitted under the public terms, while commercial or transmitting uses require separate arrangements. [U4]
+
+Therefore FLARM is technically attractive but cannot be promoted into a commercial HPR service merely because the packets can be received.
+
+---
+
+## 5. ACARS: operational datalink, not a primary tracker
+
+ICAO material describes ACARS as an aircraft-ground digital datalink used for message exchange and airline operational control, with use across VHF and satellite-linked environments. ICAO's broader communications roadmap treats ACARS as part of the air-ground communications ecosystem rather than as surveillance equivalent to ADS-B. [D1][D2]
+
+For HPRadar, ACARS is most useful as a **secondary observation/correlation source**. It should not be normalized into a fake continuous track.
+
+A conservative product rule is preferable:
+
+> Extract only the minimum metadata required for legitimate correlation, engineering or research. Do not build a public archive of operational message contents by default.
+
+That policy is architectural as well as privacy-conscious: the HPR core stores what a source *is*, not what would be convenient to display.
+
+---
+
+## 6. VDL Mode 2: modern air-ground datalink observation
+
+ICAO Doc 9776 defines VDL Mode 2 as an air/ground data link compatible with the Aeronautical Telecommunication Network, and ICAO's GANP continues to include VDL Mode 2 in the operational communications roadmap. [D3][D2]
+
+VDL2 therefore belongs beside ACARS as a datalink observation source. It may expose network/aircraft communication events useful for engineering or correlation, but it should not be mixed into the hot aircraft-position path unless a specific application justifies it.
+
+---
+
+## 7. HFDL: long-range datalink observations
+
+ICAO's GANP explicitly identifies High Frequency Data Link as a datalink supporting oceanic airspace and complementing voice communications. [D2]
+
+That gives HFDL a very different observation profile from line-of-sight ADS-B:
 
 ```text
-1090 MHz receiver
-AIS receiver
-Remote ID receiver
-        ↓
-common station identity
-        ↓
-HPR object/event model
+ADS-B / Mode-S → dense local/regional surveillance
+HFDL           → sparse long-range datalink observations
 ```
 
-Remote ID is the strongest candidate for opening a genuine UAV domain rather than trying to infer UAVs only from ADS-B aircraft categories.
+The HPR core can represent both without pretending they provide the same kind of evidence.
 
 ---
 
-## 4. FLARM, OGN, FANET and related low-altitude aviation networks
+## 8. Radiosondes: moving objects plus environmental telemetry
 
-Gliders, sailplanes, paragliders, ultralights and other light aircraft can be poorly represented in a pure ADS-B view.
+NOAA/NWS describes radiosondes as balloon-borne instrument packages whose sensors transmit pressure, temperature, relative humidity and GPS position, typically in the 400–405.9 MHz range; winds aloft are derived by tracking the radiosonde's motion. [E1]
 
-The Open Glider Network ecosystem already demonstrates multi-protocol reception around FLARM, OGN/OGNTP, FANET, ADS-L and ADS-B. FLARM's public FAMP specification exposes traffic information including identification, position, heading and aircraft type, using license-free spectrum such as 868/915 MHz depending on region.
-
-This makes the family technically attractive for HPRadar because it can improve low-altitude situational awareness where ADS-B coverage is incomplete.
-
-However, protocol availability and commercial rights are not the same thing. FLARM's public-protocol terms permit defined receive-only non-commercial uses, while commercial use requires separate licensing. HPRadar must therefore treat licensing as part of the ingestion contract, not as an afterthought.
-
-Potential HPR value:
+This is an unusually clean fit for Atlas because one source simultaneously produces:
 
 ```text
-ADS-B / Mode-S
-       +
-FLARM / OGN / FANET
-       +
-Remote ID
-       ↓
-much stronger low-altitude aviation picture
+entity      → radiosonde
+position    → lat/lon/altitude
+motion      → movement / derived wind
+telemetry   → pressure / temperature / humidity
+observation → receiver + timestamp + RF evidence
 ```
 
----
-
-## 5. ACARS: operational observations from aircraft
-
-ACARS is not primarily a tracker. It is an airline/aircraft operational messaging system carried over several bearers, including VHF and other long-range links.
-
-Depending on message content and network, observable metadata may help correlate:
-
-- flight identity
-- aircraft identity
-- departure/arrival context
-- weather reports
-- maintenance/operational events
-- airline operational traffic
-
-For HPRadar, the useful role is **secondary observation and correlation**, not publishing raw message traffic.
-
-A strong default policy would be:
-
-> Extract only the minimum metadata needed for legitimate tracking, correlation and system research; do not build a public archive of operational/private message content.
-
-That keeps ACARS useful without turning HPRadar into a message-sniffing product.
-
----
-
-## 6. VDL Mode 2: modern aviation datalink observation
-
-VDL Mode 2 is a major VHF air-ground datalink technology and continues to support operational datalink services including CPDLC environments.
-
-It can expose a different class of aviation observation than ADS-B:
-
-- aircraft/network identity
-- datalink logon and network events
-- operational communications metadata
-- AOC/ATC datalink context where legally and appropriately processed
-
-Again, this is not a high-rate tracking source. Its value is in **correlation, network research and operational context**.
-
-For HPR architecture, VDL2 belongs beside ACARS as an observation source, not inside the hot aircraft-position wire.
-
----
-
-## 7. HFDL: long-range aviation observations beyond VHF line of sight
-
-High Frequency Data Link extends aircraft datalink communications into regions where VHF coverage is absent or impractical. HF propagation can allow a ground station to receive aircraft observations over very long distances.
-
-This creates an interesting complement:
-
-```text
-ADS-B / Mode-S → precise local/regional line-of-sight surveillance
-HFDL           → sparse long-range operational observations
-```
-
-HFDL is not a replacement for ADS-B and should not be normalized as if it were a continuous track. It is evidence about an aircraft at a point in time and should retain that provenance.
-
----
-
-## 8. Radiosondes: moving objects plus atmospheric telemetry
-
-Weather balloons are exceptionally compatible with the Atlas object model because they are both moving spatial objects and environmental sensors.
-
-A radiosonde observation can contain or enable:
-
-- sonde identity
-- latitude/longitude
-- altitude
-- temperature
-- pressure
-- humidity
-- movement-derived wind information
-
-This produces a very natural HPR object:
-
-```text
-Radiosonde
-├── identity
-├── position / altitude / velocity
-├── receiver observation
-└── atmospheric payload
-    ├── temperature
-    ├── pressure
-    └── humidity
-```
-
-Unlike a decorative weather overlay, this is a physically observed sensor moving through the atmosphere.
-
-Radiosondes therefore offer one of the cleanest ways to connect HPR tracking with environmental sensing.
+It is one of the strongest examples of why HPR should model `Entity`, `Measurement` and provenance independently of transport protocol.
 
 ---
 
 ## 9. Direct weather-satellite reception
 
-Weather satellites are a different category. They are not primarily another moving-object feed for Atlas; their value is direct environmental observation.
+NOAA/NESDIS operates HRIT/EMWIN as a direct-to-user L-band broadcast from the GOES-R series. NOAA documents weather warnings, environmental charts, satellite imagery and data-collection-system products, and states that the broadcast is open-format with no NOAA fee or license requirement to receive it. [E2]
 
-Several meteorological satellite systems provide direct-broadcast services intended for receiving stations. These can deliver imagery or instrument products without relying on a commercial tracking API.
+This is not another aircraft/vessel tracker feed. It is an environmental-observation source.
 
-The hardware and bandwidth requirements are often far beyond a simple RTL-SDR edge node, so this should be treated as a future sensor class rather than bundled into the current Pi appliance.
-
-Conceptually:
-
-```text
-moving-object RF     → ADS-B, AIS, Remote ID, FLARM
-atmospheric telemetry → radiosondes
-earth observation     → meteorological satellites
-```
-
-That is a much broader view of what Atlas can eventually represent.
+Its hardware profile is also different from a small 1090 MHz RTL-SDR node, so HPR should treat direct weather-satellite reception as a distinct receiver capability rather than forcing it into the current Pi appliance.
 
 ---
 
-## 10. Maritime DSC: event data rather than continuous tracks
+## 10. Maritime DSC: events rather than tracks
 
-Digital Selective Calling (DSC) is part of maritime safety and calling infrastructure. Depending on message type it can carry information such as station identity, call category and distress/urgency/safety events, with position information available in relevant cases.
+ITU-R M.493-16 is the current in-force recommendation for Digital Selective Calling in the maritime mobile service. US Coast Guard GMDSS guidance identifies VHF Channel 70 as a DSC channel for distress, safety and calling purposes. [M3][M4]
 
-This should not be modeled like AIS position streaming.
-
-Its HPR value is an **event layer**:
+DSC should therefore enter HPR primarily as an **event source**, not as an AIS-like continuous track.
 
 ```text
-AIS vessel state
-       +
-DSC safety/distress event
-       ↓
-richer maritime situational context
+vessel / station context
+        +
+DSC call / distress / safety event
+        ↓
+maritime event model
 ```
 
-The distinction between object state and safety event is important for both data semantics and the user interface.
+The distinction between object state and event state should remain explicit all the way to the UI.
 
 ---
 
 ## 11. NAVTEX: maritime safety context
 
-NAVTEX broadcasts maritime safety information such as navigational warnings, meteorological warnings and related safety information.
+The IMO NAVTEX Manual defines NAVTEX as an automated service for maritime safety information including navigational and meteorological warnings, forecasts and other urgent safety-related messages. [M5]
 
-NAVTEX does not identify or track vessels. Its natural role in HPR is contextual:
+NAVTEX does not become a vessel marker. Its natural representation is an advisory/event/context object associated with time, geography or maritime operations.
 
-```text
-vessel tracks
-shipping context
-weather
-NAVTEX warning
-```
-
-This is an example of why Atlas should not reduce every RF source to “another marker on the map.” Some RF observations are objects; others are events, warnings, measurements or areas of relevance.
+This is another reason the HPR core must support more than `object + position`.
 
 ---
 
-## 12. VDES: the maritime future beyond AIS
+## 12. VDES: the maritime architecture horizon beyond AIS
 
-VDES — the VHF Data Exchange System — is particularly important for a long-lived HPR Marine architecture.
+ITU-R M.2092-2, approved in February 2026 and currently in force, defines the technical characteristics of the VHF Data Exchange System. Its structure includes terrestrial and satellite VDE components as well as Application Specific Message channels. [M6]
 
-VDES encompasses AIS, Application Specific Messages (ASM) and higher-capacity VHF Data Exchange links, including terrestrial and satellite components. AIS is therefore better understood as one component of a broader maritime digital communication system rather than the final form of maritime RF data.
+IALA describes VDES as a system spanning ships, shore stations and satellites and explains that AIS is one component alongside ASM and VDE. [M7]
 
-For HPR, that suggests the durable abstraction:
+For a long-lived HPR Marine architecture, the abstraction should therefore be:
 
 ```text
-Maritime RF
+Maritime RF / data exchange
 ├── AIS
 ├── ASM
 ├── VDE terrestrial
 ├── VDE satellite
 ├── DSC
-└── maritime safety broadcasts
+└── maritime safety information sources
 ```
 
-not simply:
+rather than permanently equating `marine = AIS`.
+
+---
+
+## 13. AIS itself already proves why provenance matters
+
+The current AIS standard is ITU-R M.1371-6 (02/2026). The recommendation's message structure includes position reports as well as ship static and voyage-related data. [M1][M2]
+
+That creates an important semantic distinction:
 
 ```text
-AIS decoder → ship marker
+ship name / MMSI received in AIS message → transmitted identity
+AIS destination / ETA                    → transmitted declaration
+owner / corporate operator from registry → registry enrichment
+normalized destination port              → external context
 ```
 
-ITU-R Recommendation M.2092-2, approved in February 2026, is a strong signal that VDES should be treated as a real architecture horizon rather than a speculative side topic.
+The values may look similar on screen, but their authority and freshness are not the same.
+
+This is exactly why provenance must accompany every fact rather than being stored in a single generic `source` field at object level.
 
 ---
 
-## 13. 406 MHz ELT, EPIRB and PLB distress beacons
+## 14. 406 MHz ELT, EPIRB and PLB distress beacons
 
-The 406 MHz Cospas-Sarsat ecosystem includes:
+NOAA SARSAT documents the 406 MHz distress-beacon ecosystem including aviation ELTs, maritime EPIRBs and personal PLBs. GNSS-capable models can include position information in the digital distress message. [E3]
 
-- ELT — Emergency Locator Transmitter for aviation
-- EPIRB — Emergency Position-Indicating Radio Beacon for maritime use
-- PLB — Personal Locator Beacon
+ITU-R also maintains recommendation families covering COSPAS-SARSAT/EPIRB systems. [E4]
 
-These beacons carry a unique digital identity, and GNSS-enabled devices can include position information in the distress message.
+These should be modeled as **distress/safety events with identity and possibly position**, not as normal public trackers.
 
-They are not trackers. They are **distress events with identity and possibly position**.
-
-If HPR ever ingests this class, it must be treated as a specialized SAR/emergency layer with appropriate legal, ethical and operational safeguards. Public visualization by default would be the wrong design assumption.
+Technical receivability does not imply that public redistribution is appropriate. Any production use needs explicit legal, safety and operational review.
 
 ---
 
-## 14. Amateur APRS and experimental telemetry
+## 15. Amateur APRS and experimental telemetry
 
-APRS can broadcast callsign, position, speed/course, telemetry, weather and messages. It is technically attractive because it resembles a generic low-bandwidth object/telemetry network and is widely used for amateur stations, vehicles, balloons and experimental payloads.
+TAPR's APRS Protocol Reference defines the protocol used in the amateur ecosystem. APRS is useful to HPR mainly as an architectural reference for low-bandwidth identity, position, telemetry and message-bearing systems. [P1]
 
-It is a useful architectural reference and potential research source, but any production use must respect amateur-radio rules, local regulation and community norms.
+Any actual deployment must separately respect amateur-radio regulation and local rules; a project protocol specification is not a regulatory authorization.
 
 ---
 
-## What HPR should *not* become
+## What HPR should not become
 
-An SDR can receive many other transmissions: proprietary ISM telemetry, LoRa/LoRaWAN signals, Bluetooth devices, Wi-Fi management traffic and many other radio systems.
+An SDR can physically receive many more signals: proprietary ISM telemetry, LoRa/LoRaWAN, Bluetooth activity, Wi-Fi management traffic and other systems.
 
-The fact that a signal is physically receivable does **not** automatically make it appropriate to collect, persist or publish.
+**Receivable is not the same as appropriate to collect, retain or publish.**
 
-A useful HPR policy boundary is:
+The default HPR boundary should be:
 
-> Prefer broadcasts whose intended purpose is public identification, navigation, safety, meteorology or situational awareness, or whose protocol/license explicitly supports the intended receive use.
+> Prefer signals whose intended function is public/cooperative surveillance, identification, navigation, safety, meteorology or situational awareness, or whose governing specification/license clearly supports the intended receive use.
 
-This keeps HPRadar on the side of legitimate observation infrastructure rather than indiscriminate RF surveillance.
+Anything outside that boundary requires a separate legal, privacy and product justification.
 
 ---
 
 ## Priority for HPRadar
 
-If only a small number of new domains are pursued, the best candidates are:
+From an architectural-value perspective, the strongest next candidates remain:
 
-1. **Drone Remote ID** — highest strategic value; opens the UAV domain directly.
-2. **Mode-S non-ADS-B + MLAT** — not optional long-term; this belongs in the aviation core.
-3. **FLARM / OGN / FANET / ADS-L** — fills important low-altitude aviation gaps, subject to licensing.
-4. **Radiosonde** — unusually clean fit between tracking and environmental telemetry.
-5. **ACARS / VDL2 / HFDL** — useful secondary aviation observations and correlation, not primary position feeds.
-6. **VDES + DSC + NAVTEX** — evolves HPR Marine beyond an AIS-only worldview.
+1. **Remote ID** — direct entry into the UAV domain. [U1][U2]
+2. **Mode-S non-ADS-B + MLAT** — core aviation surveillance rather than an optional side feature. [A5][A7]
+3. **FLARM / OGN family** — useful low-altitude coverage, subject to explicit licensing review. [U3][U4][U5]
+4. **Radiosonde** — excellent fit for entity + position + telemetry. [E1]
+5. **ACARS / VDL2 / HFDL** — secondary aviation observations and correlation. [D1][D2][D3]
+6. **VDES + DSC + NAVTEX** — the natural path beyond an AIS-only marine worldview. [M3][M5][M6][M7]
 
-This order is based on architectural value to HPR, not merely on how easy each decoder is to run.
+This is a product/architecture priority, not a claim about decoder difficulty.
 
 ---
 
@@ -395,9 +315,8 @@ This order is based on architectural value to HPR, not merely on how easy each d
         ADS-B                   AIS                   Radiosonde
         Mode-S                  VDES                  Weather satellite
         UAT                     DSC
-        FLARM / OGN             NAVTEX
-        FANET                   EPIRB
-        Remote ID
+        Remote ID               NAVTEX
+        FLARM / OGN             EPIRB
         ACARS
         VDL2
         HFDL
@@ -406,89 +325,123 @@ This order is based on architectural value to HPR, not merely on how easy each d
               \                   |                   /
                        receiver observations
                                ↓
-                    decoder / solver / normalizer
+                       source adapters
                                ↓
-                     HPR canonical object model
+                     HPR Observation Core
                                ↓
-                           HPR Atlas
+                 canonical state + provenance
+                               ↓
+                   HPR wire / APIs / Atlas
 ```
 
-`MLAT` deliberately does not appear as an RF bearer in this diagram. It is a solver that turns synchronized Mode-S observations from multiple receivers into a derived aircraft position.
+`MLAT` deliberately does not appear as an RF bearer. It consumes observations and emits solved facts.
 
 ---
 
-## Architectural consequence: normalize semantics, not protocols
+## Core consequence: normalize semantics, not protocols
 
-The long-term mistake would be to create a separate end-to-end product stack for every signal:
+The wrong long-term architecture is:
 
 ```text
-ADS-B app
-AIS app
-Remote-ID app
-FLARM app
-Radiosonde app
+ADS-B model
+AIS model
+Remote-ID model
+FLARM model
+Radiosonde model
+VDES model
 ...
 ```
 
-A stronger HPR model is:
+The durable model is:
 
 ```text
-physical signal
+source adapter
       ↓
-protocol-specific decoder
+Observation
       ↓
-observation with provenance
+Fact / Event / Measurement
       ↓
-canonical object / event / measurement
+provenance-aware resolution
       ↓
-shared HPR wire + APIs
+Entity State
       ↓
-Atlas surfaces
+Enrichment + Context
+      ↓
+projection to wire / API / UI
 ```
 
-The canonical model should preserve the distinction between:
+The detailed matrix and adapter contract live in [HPR Observation Core](hpr-observation-core.md). Its key design rule is simple:
 
-- what the transmitter explicitly broadcast;
-- what the local decoder derived;
-- what a network solver such as MLAT calculated;
-- which receiver observed it;
-- what static enrichment came from an external database;
-- what contextual intelligence came from another system.
+> **Rows are source adapters. Columns are fixed processing stages. Adding a signal appends a row; it does not redesign the matrix.**
 
-That provenance becomes more important, not less, as HPR adds sources.
-
-The product should be able to say not only **“where is this object?”** but also **“how do we know?”**
+That is the difference between building a collection of receivers and building a core platform.
 
 ---
 
 ## Blog angle
 
-A public article should avoid presenting this as a promise to ingest every radio system. The stronger narrative is:
+The public article should not promise that HPRadar will ingest every receivable RF system. The stronger narrative is:
 
-> ADS-B and AIS are only two examples of a much larger class of legitimate free-to-air digital observations. HPRadar's opportunity is not to accumulate decoders, but to build one coherent model for objects, events, measurements and provenance across domains.
+> ADS-B and AIS are two examples of a broader class of legitimate digital observations. HPRadar's opportunity is not to accumulate decoders, but to build one coherent model for objects, events, measurements and provenance across domains.
 
-That is the point where HPRadar stops being merely an aircraft-and-ship tracker and starts becoming a **multi-domain observation platform**.
+The platform should be able to answer not only **“where is this object?”** but also **“how do we know?”**
 
 ---
 
-## References
+## Source authority
 
-- FAA — Remote Identification of Drones: https://www.faa.gov/uas/getting_started/remote_id
-- FLARM — FAMP Public Protocol: https://www.flarm.com/en/integration/flarm-famp-public-protocol/
-- FLARM — Publishing the FAMP Public Protocol and licensing notes: https://www.flarm.com/en/news/publishing-the-flarm-famp-public-protocol/
-- Open Glider Network — Receiver ecosystem: https://wiki.glidernet.org/ogn-receiver-installation
-- EUROCONTROL — Datalink / CPDLC material: https://www.eurocontrol.int/publication/controller-pilot-datalink-communications-cpdlc-recommended-practices
-- EUROCONTROL — Datalink Performance and Capacity Analysis: https://www.eurocontrol.int/publication/eurocontrol-datalink-performance-and-capacity-analysis-2024-edition
-- IALA — VHF Data Exchange System (VDES): https://www.iala.int/technical/connectivity/vdes-vhf-data-exchange-system/
-- ITU-R — Recommendation M.2092-2 (02/2026): https://www.itu.int/rec/R-REC-M.2092
-- NOAA SARSAT — 406 MHz emergency distress beacons: https://www.sarsat.noaa.gov/emergency-406-beacons/
+All external factual claims in this article follow the HPR KB [Source Policy](../../meta/source-policy.md). The full section-by-section audit is maintained in the [HPR RF World Source Register](../references/hpr-rf-world.md).
 
-## Status / Next Questions
+### Aviation surveillance
 
-- **EXPLORATORY:** this is a technology/domain map, not yet an implementation roadmap.
-- Define a formal HPR taxonomy for `object`, `event`, `measurement`, `observation` and `context` before adding many new protocols.
-- Extend the ADS-B / MLAT / AIS data-layer matrix into the candidate RF families only after the taxonomy is stable.
-- Scout Remote ID receiver implementations first.
-- Evaluate FLARM commercial licensing before any public HPR service integration.
-- Decide which sources belong on Edge, which belong only at aggregator level, and which should remain research-only.
-- Preserve provenance in every future HPR wire contract.
+[A1]: https://www.faa.gov/air_traffic/technology/equipadsb/capabilities/ins_outs
+[A2]: https://www.faa.gov/sites/faa.gov/files/air_traffic/technology/adsb/quicklinks/ADS-B_In_Strategy.pdf
+[A3]: https://www.faa.gov/air_traffic/technology/equipadsb/installation
+[A4]: https://www.faa.gov/air_traffic/technology/equipadsb/resources/faq
+[A5]: https://www.eurocontrol.int/service/surveillance-system-and-sensors
+[A6]: https://www.eurocontrol.int/service/surveillance-rf-environment-monitoring-10301090-mhz
+[A7]: https://www.eurocontrol.int/publication/wide-area-multilateration-guidelines-achieving-operational-approval-wam-system
+
+### UAV / low-altitude
+
+[U1]: https://www.faa.gov/uas/getting_started/remote_id
+[U2]: https://www.easa.europa.eu/en/document-library/easy-access-rules/online-publications/easy-access-rules-unmanned-aircraft-systems
+[U3]: https://www.flarm.com/en/integration/flarm-famp-public-protocol/
+[U4]: https://www.flarm.com/en/news/publishing-the-flarm-famp-public-protocol/
+[U5]: https://wiki.glidernet.org/ogn-receiver-installation
+
+### Aviation datalink
+
+[D1]: https://www.icao.int/communications-navigation-and-surveillance-cns-section
+[D2]: https://ganpportal.icao.int/ASBU/Thread
+[D3]: https://store.icao.int/en/manual-on-vhf-digital-link-vdl-mode-2-doc-9776
+
+### Maritime
+
+[M1]: https://www.itu.int/rec/R-REC-M.1371-6-202602-I/en
+[M2]: https://www.itu.int/dms_pubrec/itu-r/rec/m/R-REC-M.1371-6-202602-I%21%21TOC-HTM-E.htm
+[M3]: https://www.itu.int/rec/R-REC-M.493/en
+[M4]: https://www.navcen.uscg.gov/gmdss-frequently-asked-questions
+[M5]: https://wwwcdn.imo.org/localresources/en/OurWork/Safety/Documents/Documents%20relevant%20to%20GMDSS/MSC.1-Circ.1403-Rev.2.pdf
+[M6]: https://www.itu.int/rec/R-REC-M.2092-2-202602-I/en
+[M7]: https://www.iala.int/technical/connectivity/vdes-vhf-data-exchange-system/
+
+### Environmental / distress
+
+[E1]: https://www.weather.gov/upperair/factsheet
+[E2]: https://www.ospo.noaa.gov/operations/goes/hrit/
+[E3]: https://www.sarsat.noaa.gov/emergency-406-beacons/
+[E4]: https://www.itu.int/en/ITU-R/terrestrial/mars/Pages/References.aspx
+
+### Amateur / experimental
+
+[P1]: https://files.tapr.org/software_library/aprs/aprsspec/spec/aprs101m/APRS101m.pdf
+
+## Status / next questions
+
+- **EXPLORATORY:** this is a sourced technology/domain map, not an implementation commitment.
+- **CANONICAL CORE:** protocol-independent semantics now live in `hpr-observation-core.md`; this article must not invent a parallel taxonomy.
+- Vietnam-specific receive/store/redistribute legality still requires Vietnam-specific authoritative legal sources before any relevant public service is launched.
+- Remote ID is the first new source worth a receiver/adapter scout.
+- FLARM commercial licensing must be settled before public/commercial integration.
+- Future signal families should pass the Observation Core adapter-conformance gate before entering production.

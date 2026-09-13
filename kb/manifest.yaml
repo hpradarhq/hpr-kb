@@ -106,6 +106,7 @@ streams:
     maturity: HIGH
     related:
       - hpradarhq
+      - hpr-observation-core
     sources:
       - type: chatgpt
         session: hpr-atlas-heli-2026-08-18
@@ -120,12 +121,40 @@ streams:
         raw_available: false
         source_status: session-provided
 
+  hpr-observation-core:
+    title: HPR Observation Core
+    file: kb/streams/hpr-observation-core.md
+    status: ACTIVE
+    maturity: HIGH
+    related:
+      - hpr-rf-world
+      - hpr-atlas
+      - hpradarhq
+    sources:
+      - type: chatgpt
+        session: hpr-observation-core-2026-09-13
+        raw_available: false
+        source_status: session-derived
+      - type: external-standard
+        name: ITU-R M.1371-6 AIS
+        source_status: primary-standard
+      - type: external-authority
+        name: FAA ADS-B
+        source_status: primary-regulator
+      - type: external-authority
+        name: EUROCONTROL surveillance and WAM
+        source_status: primary-regulator
+      - type: kb-reference
+        file: kb/references/hpr-rf-world.md
+        source_status: authoritative-source-register
+
   hpr-rf-world:
     title: Beyond ADS-B and AIS — The Free-to-Air RF World
     file: kb/streams/hpr-rf-world.md
     status: EXPLORATORY
     maturity: MEDIUM
     related:
+      - hpr-observation-core
       - hpr-atlas
       - hpradarhq
     sources:
@@ -133,21 +162,39 @@ streams:
         session: hpr-edge-rf-world-2026-09-13
         raw_available: false
         source_status: session-derived
-      - type: external
-        name: FAA Remote ID
-        source_status: authoritative-reference
-      - type: external
+      - type: kb-reference
+        file: kb/references/hpr-rf-world.md
+        source_status: authoritative-source-register
+      - type: external-standard
+        name: ITU-R M.1371-6 AIS
+        source_status: primary-standard
+      - type: external-standard
+        name: ITU-R M.2092-2 VDES
+        source_status: primary-standard
+      - type: external-standard
+        name: ITU-R M.493-16 DSC
+        source_status: primary-standard
+      - type: external-standard
+        name: IMO NAVTEX Manual MSC.1-Circ.1403-Rev.2
+        source_status: primary-standard
+      - type: external-authority
+        name: FAA ADS-B and Remote ID
+        source_status: primary-regulator
+      - type: external-authority
+        name: EASA UAS Remote Identification
+        source_status: primary-regulator
+      - type: external-authority
+        name: EUROCONTROL Mode-S and WAM
+        source_status: primary-regulator
+      - type: external-authority
+        name: ICAO CNS and GANP datalink material
+        source_status: primary-standard
+      - type: external-authority
+        name: NOAA NWS radiosonde and NOAA SARSAT
+        source_status: primary-regulator
+      - type: protocol-owner
         name: FLARM FAMP Public Protocol
-        source_status: authoritative-reference
-      - type: external
-        name: IALA VDES
-        source_status: authoritative-reference
-      - type: external
-        name: ITU-R M.2092-2
-        source_status: authoritative-reference
-      - type: external
-        name: NOAA SARSAT 406 MHz beacons
-        source_status: authoritative-reference
+        source_status: protocol-owner
 
   hpradarhq:
     title: HPRadarHQ
@@ -157,6 +204,7 @@ streams:
     related:
       - github-org-migration
       - hpr-atlas
+      - hpr-observation-core
     sources:
       - type: chatgpt
         session: current-chat-2026-08-18
