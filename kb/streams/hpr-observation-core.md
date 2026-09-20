@@ -23,6 +23,8 @@ tags:
 
 # HPR Observation Core
 
+> **Reconciliation notice — 2026-09-20:** The [draft Architecture Constitution](hpr-architecture-constitution.md) records newer session direction and proposes how to reconcile this stream. Its supersession table covers visual baseline and core extensibility/retention. Historical content below is preserved; the draft does not become approved policy until review. This stream's maturity label is not a runtime certification.
+
 ## Intent
 
 Define one protocol-independent observation model for HPRadar so that ADS-B, Mode-S, MLAT, AIS and future sources such as Remote ID, FLARM, VDES, radiosondes or other legitimate broadcast systems can be added without redesigning the data model.

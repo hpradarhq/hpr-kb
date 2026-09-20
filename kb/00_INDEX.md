@@ -17,3 +17,7 @@
 | [HPRadarHQ](streams/hpradarhq.md) | GitHub organization boundary for the HPRadar product family | ACTIVE | MEDIUM | 2026-08-18 | GitHub Organization Migration, HPR Atlas |
 | [Legacy Port Modernization](streams/legacy-port-modernization.md) | Contain and progressively replace the restored legacy port application | ACTIVE | MEDIUM | 2026-08-18 | Grand MATFLOW, PlantOps Platform |
 | [Chess Leisure](streams/chess-leisure.md) | Preserve chess as a separate leisure/study stream rather than losing it inside technical sessions | ACTIVE | LOW | 2026-08-18 | — |
+
+## Proposed architecture SSOT
+
+[HPR Architecture Constitution](streams/hpr-architecture-constitution.md) — ACTIVE / MEDIUM / TENTATIVE, revision 0.1, 2026-09-20. Includes BR1/BR2 diagrams, repository responsibilities and explicit reconciliation of older Atlas/Core guidance.

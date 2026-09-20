@@ -1,5 +1,7 @@
 # HPR Atlas
 
+> **Reconciliation notice — 2026-09-20:** The [draft Architecture Constitution](hpr-architecture-constitution.md) records newer session direction and proposes how to reconcile this stream. Its supersession table covers visual baseline and core extensibility/retention. Historical content below is preserved; the draft does not become approved policy until review. This stream's maturity label is not a runtime certification.
+
 ## Intent
 
 Define the canonical product, interaction, entity, rendering and frontend architecture for HPR Atlas: a unified live spatial tracker for aircraft, vessels, maritime AtoN and sensing stations, with restrained progressive disclosure and a shared visual language across the global Atlas and local HPR Edge surfaces.
