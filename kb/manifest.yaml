@@ -281,3 +281,26 @@ streams:
         session: chess-to-grand-matflow-context-2026-08
         raw_available: false
         source_status: context-derived
+
+  hpr-architecture-constitution:
+    title: HPR Architecture Constitution
+    file: kb/streams/hpr-architecture-constitution.md
+    status: ACTIVE
+    maturity: MEDIUM
+    related:
+      - hpr-atlas
+      - hpr-observation-core
+      - hpr-rf-harvest-landscape
+    sources:
+      - type: chatgpt
+        session: unify-hpr-architecture-2026-09-20
+        raw_available: false
+        source_status: session-derived
+      - type: github
+        repository: hpradarhq/hpr-atlas
+        commit: e039281de231f9a62eb4c88d20fc3f688cc79029
+        source_status: implementation-review
+      - type: github
+        repository: hpradarhq/hpr-atlas
+        commit: 3952a7f73a24520b027c748e5ea7c3442872c70c
+        source_status: uuid-branch-review
